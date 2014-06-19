@@ -1,0 +1,29 @@
+import fileinput
+import time
+import csv
+
+
+click ={}  # to represent activities of a unique combination of User Device (UDID) and Ad ID
+
+for line in fileinput.input('click.txt'):
+	data =line.split('\t')
+	click[data[4],data[9]]={} #read file into values, data[4] represents UDID, and data[9] Ad ID. 
+	click[data[4],data[9]]["clicktime"]=int(time.mktime(time.strptime(data[1].strip(), "%d/%b/%Y:%H:%M:%S"))) # mark time point of the click
+	click[data[4],data[9]]["preClickImp"]= 0  #count of impressions before a click
+	click[data[4],data[9]]["adFormat"]=data[7] #mark the adformat
+	click[data[4],data[9]]["afterClickImp"]=0 #count of impressions after a click
+	
+for line in fileinput.input('0610-imp.txt'):
+	data=line.split('\t')
+	udid = data[5]
+	bid = data[10]
+	if click.has_key((udid,bid)):
+		impTime = int(time.mktime(time.strptime(data[1].strip(), "%d/%b/%Y:%H:%M:%S")))
+		if impTime < click[udid,bid]["clicktime"] :
+			click[udid,bid]["preClickImp"]= click[udid,bid]["preClickImp"] +1
+		else :
+			click[udid,bid]["afterClickImp"]=click[udid,bid]["afterClickImp"]+1
+
+w =csv.writer(open("output.csv","w"))
+for key, val in click.items():
+	w.writerow([key,val])
